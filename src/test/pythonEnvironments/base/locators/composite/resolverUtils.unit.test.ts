@@ -500,7 +500,7 @@ suite('Resolver Utils', () => {
             const actual = await resolveEnvUsingKind({
                 executablePath: interpreterPath,
                 kind: PythonEnvKind.Unknown,
-                source: [PythonEnvSource.WindowsRegistry],
+                source: [PythonEnvSource.WindowsRegistry, PythonEnvSource.PathEnvVar],
             });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'python38'),
@@ -510,7 +510,7 @@ suite('Resolver Utils', () => {
                 arch: Architecture.x86, // Provided by registry
                 org: 'PythonCodingPack', // Provided by registry
                 name: 'python38',
-                source: [PythonEnvSource.WindowsRegistry],
+                source: [PythonEnvSource.WindowsRegistry, PythonEnvSource.PathEnvVar],
             });
             expected.distro.defaultDisplayName = 'Python 3.8 (32-bit)';
             assertEnvEqual(actual, expected);

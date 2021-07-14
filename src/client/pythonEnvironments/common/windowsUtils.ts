@@ -110,13 +110,17 @@ export async function getInterpreterDataFromRegistry(
     return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
 }
 
-let registryInterpreters: IRegistryInterpreterData[] | undefined;
+let registryInterpretersPromise: Promise<IRegistryInterpreterData[]> | undefined;
 
 export async function getRegistryInterpreters(ignoreCache = false): Promise<IRegistryInterpreterData[]> {
-    if (!isTestExecution() && !ignoreCache && registryInterpreters !== undefined) {
-        return registryInterpreters;
+    if (!isTestExecution() && !ignoreCache && registryInterpretersPromise !== undefined) {
+        return registryInterpretersPromise;
     }
+    registryInterpretersPromise = getRegistryInterpretersImpl();
+    return registryInterpretersPromise;
+}
 
+async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]> {
     let registryData: IRegistryInterpreterData[] = [];
 
     for (const arch of ['x64', 'x86']) {
@@ -134,6 +138,5 @@ export async function getRegistryInterpreters(ignoreCache = false): Promise<IReg
             }
         }
     }
-    registryInterpreters = uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
-    return registryInterpreters;
+    return uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
 }

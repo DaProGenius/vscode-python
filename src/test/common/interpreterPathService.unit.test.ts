@@ -210,9 +210,35 @@ suite('Interpreter Path Service', async () => {
         persistentState.setup((p) => p.updateValue(true)).verifiable(TypeMoq.Times.once());
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
+        interpreterPathService.inspect = (_) => ({
+            globalValue: '',
+            workspaceFolderValue: undefined,
+            workspaceValue: undefined,
+        });
         await interpreterPathService._moveGlobalSettingValueToNewStorage('globalPythonPath');
 
         assert(update.calledWith(undefined, ConfigurationTarget.Global, 'globalPythonPath'));
+        persistentState.verifyAll();
+    });
+
+    test('If the one-off transfer to new storage has not happened yet for the user setting but setting is set, do not update and simply return', async () => {
+        const update = sinon.stub(InterpreterPathService.prototype, 'update');
+        const persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState<boolean>(isGlobalSettingCopiedKey, false))
+            .returns(() => persistentState.object);
+        persistentState.setup((p) => p.value).returns(() => true);
+        persistentState.setup((p) => p.updateValue(TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
+
+        interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
+        interpreterPathService.inspect = (_) => ({
+            globalValue: 'someValue',
+            workspaceFolderValue: undefined,
+            workspaceValue: undefined,
+        });
+        await interpreterPathService._moveGlobalSettingValueToNewStorage('globalPythonPath');
+
+        assert(update.notCalled);
         persistentState.verifyAll();
     });
 
@@ -226,6 +252,11 @@ suite('Interpreter Path Service', async () => {
         persistentState.setup((p) => p.updateValue(TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
+        interpreterPathService.inspect = (_) => ({
+            globalValue: undefined,
+            workspaceFolderValue: undefined,
+            workspaceValue: undefined,
+        });
         await interpreterPathService._moveGlobalSettingValueToNewStorage('globalPythonPath');
 
         assert(update.notCalled);

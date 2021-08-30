@@ -195,7 +195,8 @@ export class InterpreterPathService implements IInterpreterPathService {
             isGlobalSettingCopiedKey,
             false,
         );
-        const shouldUpdateGlobalSetting = !isGlobalSettingCopiedStorage.value;
+        const isNewStorageSet = this.inspect(undefined).globalValue;
+        const shouldUpdateGlobalSetting = !isGlobalSettingCopiedStorage.value && !isNewStorageSet;
         if (shouldUpdateGlobalSetting) {
             await this.update(undefined, ConfigurationTarget.Global, value);
             await isGlobalSettingCopiedStorage.updateValue(true);

@@ -25,6 +25,7 @@ export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
                     traceVerbose(`Found conda executable: ${executablePath}`);
                     yield { kind: PythonEnvKind.Conda, executablePath, envPath: env.prefix };
                 } else {
+                    yield { kind: PythonEnvKind.Conda, executablePath: 'python', envPath: env.prefix };
                     traceError(`Executable for conda env not found: ${JSON.stringify(env)}`);
                 }
             } catch (ex) {

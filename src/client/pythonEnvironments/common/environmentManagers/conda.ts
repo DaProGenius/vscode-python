@@ -502,11 +502,11 @@ export class Conda {
 
     @cache(-1, true)
     private async getInterpreterPathUsingCondaRun(condaEnv: CondaEnvInfo) {
-        const runArgs = await this.getRunPythonArgs(condaEnv);
-        if (runArgs) {
-            const python = buildPythonExecInfo(runArgs);
-            return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
-        }
+        // const runArgs = await this.getRunPythonArgs(condaEnv);
+        // if (runArgs) {
+        //     const python = buildPythonExecInfo(runArgs);
+        //     return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
+        // }
         return undefined;
     }
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { version } from 'os';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
@@ -11,6 +12,8 @@ import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../commo
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+import { Architecture } from '../../../common/utils/platform';
+import { getEmptyVersion } from './pythonVersion';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -100,6 +103,19 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
+        if (env.executable.filename === 'python') {
+            const emptyInterpreterInfo: InterpreterInformation = {
+                arch: Architecture.Unknown,
+                executable: {
+                    filename: 'python',
+                    ctime: -1,
+                    mtime: -1,
+                    sysPrefix: '',
+                },
+                version: getEmptyVersion(),
+            };
+            return emptyInterpreterInfo;
+        }
         if (this.workerPool === undefined) {
             this.workerPool = createRunningWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>(
                 buildEnvironmentInfo,

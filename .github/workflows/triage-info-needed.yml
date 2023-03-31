@@ -1,0 +1,77 @@
+name: Add/Remove Info-needed Label
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  add_label:
+    runs-on: ubuntu-latest
+    env:
+      TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd"]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check for label and author
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const labels = issue.data.labels.map(label => label.name);
+            const commentAuthor = github.context.payload.comment.user.login;
+            const commentBody = github.context.payload.comment.body;
+            const isTeamMember = JSON.parse('${{ env.TRIAGERS }}').includes(commentAuthor);
+
+            const isRequestForInfo =
+              commentBody.match(/(\?|please|could you|would you|may I|can you|provide|kindly|let me know|tell me|share with me|inform me)/gi);
+
+            const hasInfoNeededLabel = labels.includes('info-needed');
+            const hasTriageNeededLabel = labels.includes('triage-needed');
+            const isCommentAuthorIssueCreator = commentAuthor !== issue.data.user.login;
+
+            const shouldAddLabel = isTeamMember && !hasInfoNeededLabel && hasTriageNeededLabel && isCommentAuthorIssueCreator && isRequestForInfo;
+
+            console.log(`shouldAddLabel: ${shouldAddLabel}`);
+
+            if (shouldAddLabel) {
+              await github.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['info-needed']
+              });
+            }
+
+  remove_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check for label and author
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const labels = issue.data.labels.map(label => label.name);
+            const commentAuthor = github.context.payload.comment.user.login;
+            const issueAuthor = issue.data.user.login;
+            const shouldRemoveLabel = labels.includes('info-needed') && commentAuthor === issueAuthor && labels.includes('triage-needed');
+            console.log(`shouldRemoveLabel: ${shouldRemoveLabel}`);
+            if (shouldRemoveLabel) {
+              await github.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'info-needed'
+              });
+            }

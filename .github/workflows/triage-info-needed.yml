@@ -1,4 +1,4 @@
-name: Add/Remove Info-needed Label
+name: Triage info-needed label
 
 on:
   issue_comment:
@@ -8,7 +8,8 @@ jobs:
   add_label:
     runs-on: ubuntu-latest
     env:
-      TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd"]'
+      TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon"]'
+      KEYWORDS: '["?", "please", "kindly", "let me know", "try", "inform", "can you", "could you", "would you", "may I", "provide", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -27,8 +28,8 @@ jobs:
             const commentBody = context.payload.comment.body;
             const isTeamMember = JSON.parse('${{ env.TRIAGERS }}').includes(commentAuthor);
 
-            const isRequestForInfo =
-              commentBody.match(/(\?|please|could you|would you|may I|can you|provide|kindly|let me know|tell me|share with me|inform me)/gi);
+            const keywords = JSON.parse('${{ env.KEYWORDS }}');
+            const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
 
             const hasInfoNeededLabel = labels.includes('info-needed');
             const hasTriageNeededLabel = labels.includes('triage-needed');

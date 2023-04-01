@@ -4,11 +4,13 @@ on:
   issue_comment:
     types: [created]
 
+env:
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon"]'
+
 jobs:
   add_label:
     runs-on: ubuntu-latest
     env:
-      TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon"]'
       KEYWORDS: '["?", "please", "kindly", "let me know", "try", "inform", "can you", "could you", "would you", "may I", "provide", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
       - name: Checkout code
@@ -64,9 +66,35 @@ jobs:
               issue_number: context.issue.number
             });
             const labels = issue.data.labels.map(label => label.name);
+            const comments = await github.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
             const commentAuthor = context.payload.comment.user.login;
             const issueAuthor = issue.data.user.login;
-            const shouldRemoveLabel = labels.includes('info-needed') && commentAuthor === issueAuthor && labels.includes('triage-needed');
+            let triageMentionedUsernames = [];
+            for (const comment of comments.data.slice().reverse()) {
+              if (!${{ env.TRIAGERS }}.includes(comment.user.login)) {
+                continue;
+              }
+              const matches = comment.body.match(/@\w+/g) || [];
+              const mentionedUsernames = matches.map(match => match.replace('@', ''));
+              if (mentionedUsernames.includes(commentAuthor)) {
+                triageMentionedUsernames = mentionedUsernames;
+                break;
+              } else if (commentAuthor === issueAuthor) {
+                break;
+              }
+            }
+            const shouldRemoveLabel = (
+              labels.includes('info-needed') &&
+              (
+                commentAuthor === issueAuthor ||
+                triageMentionedUsernames.includes(commentAuthor)
+              ) &&
+              labels.includes('triage-needed')
+            );
             console.log(`shouldRemoveLabel: ${shouldRemoveLabel}`);
             if (shouldRemoveLabel) {
               await github.issues.removeLabel({
@@ -75,4 +103,4 @@ jobs:
                 issue_number: context.issue.number,
                 name: 'info-needed'
               });
-            }
+            });

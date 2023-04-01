@@ -30,7 +30,7 @@ jobs:
             const commentBody = context.payload.comment.body;
             const isTeamMember = ${{ env.TRIAGERS }}.includes(commentAuthor);
 
-            const keywords = JSON.parse('${{ env.KEYWORDS }}');
+            const keywords = ${{ env.KEYWORDS }};
             const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
 
             const hasInfoNeededLabel = labels.includes('info-needed');

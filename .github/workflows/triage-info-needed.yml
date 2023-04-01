@@ -1,4 +1,4 @@
-name: Triage info-needed label
+name: Triage "info-needed" label
 
 on:
   issue_comment:

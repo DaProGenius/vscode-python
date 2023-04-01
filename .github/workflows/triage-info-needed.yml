@@ -51,11 +51,12 @@ jobs:
             }
 
   remove_label:
+    if: contains(github.event.issue.labels.*.name, 'info-needed') && contains(github.event.issue.labels.*.name, 'triage-needed')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Check for label and author
+      - name: Check for author
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,15 +66,28 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
-            const labels = issue.data.labels.map(label => label.name);
+            const commentAuthor = context.payload.comment.user.login;
+            const issueAuthor = issue.data.user.login;
+            if (commentAuthor === issueAuthor) {
+              await github.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'info-needed'
+              });
+              return;
+            }
+            if((${{ env.TRIAGERS }}.includes(commentAuthor)) {
+              // If one of triagers made a comment, ignore it
+              return;
+            }
+            // Loop through all the comments on the issue in reverse order and find the last username that a TRIAGER mentioned
+            // If the comment author is the last mentioned username, remove the "info-needed" label
             const comments = await github.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
-            const commentAuthor = context.payload.comment.user.login;
-            const issueAuthor = issue.data.user.login;
-            let triageMentionedUsernames = [];
             for (const comment of comments.data.slice().reverse()) {
               if (!${{ env.TRIAGERS }}.includes(comment.user.login)) {
                 continue;
@@ -81,26 +95,12 @@ jobs:
               const matches = comment.body.match(/@\w+/g) || [];
               const mentionedUsernames = matches.map(match => match.replace('@', ''));
               if (mentionedUsernames.includes(commentAuthor)) {
-                triageMentionedUsernames = mentionedUsernames;
-                break;
-              } else if (commentAuthor === issueAuthor) {
+                await github.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: 'info-needed'
+                });
                 break;
               }
             }
-            const shouldRemoveLabel = (
-              labels.includes('info-needed') &&
-              (
-                commentAuthor === issueAuthor ||
-                triageMentionedUsernames.includes(commentAuthor)
-              ) &&
-              labels.includes('triage-needed')
-            );
-            console.log(`shouldRemoveLabel: ${shouldRemoveLabel}`);
-            if (shouldRemoveLabel) {
-              await github.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                name: 'info-needed'
-              });
-            });

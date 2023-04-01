@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'triage-needed') && !contains(github.event.issue.labels.*.name, 'info-needed')
     env:
-      KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "inform", "can you", "could you", "would you", "may I", "provide", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
+      KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "inform", "can you", "could you", "would you", "may I", "ask", "provide", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,8 +34,6 @@ jobs:
             const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
 
             const shouldAddLabel = isTeamMember && commentAuthor !== issue.data.user.login && isRequestForInfo;
-
-            console.log(`shouldAddLabel: ${shouldAddLabel}`);
 
             if (shouldAddLabel) {
               await github.issues.addLabels({

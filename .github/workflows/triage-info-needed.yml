@@ -10,12 +10,13 @@ env:
 jobs:
   add_label:
     runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'triage-needed') && !contains(github.event.issue.labels.*.name, 'info-needed')
     env:
       KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "inform", "can you", "could you", "would you", "may I", "provide", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Check for label and author
+      - name: Check for author
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -25,7 +26,6 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
-            const labels = issue.data.labels.map(label => label.name);
             const commentAuthor = context.payload.comment.user.login;
             const commentBody = context.payload.comment.body;
             const isTeamMember = ${{ env.TRIAGERS }}.includes(commentAuthor);
@@ -33,11 +33,7 @@ jobs:
             const keywords = ${{ env.KEYWORDS }};
             const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
 
-            const hasInfoNeededLabel = labels.includes('info-needed');
-            const hasTriageNeededLabel = labels.includes('triage-needed');
-            const isCommentAuthorIssueCreator = commentAuthor !== issue.data.user.login;
-
-            const shouldAddLabel = isTeamMember && !hasInfoNeededLabel && hasTriageNeededLabel && isCommentAuthorIssueCreator && isRequestForInfo;
+            const shouldAddLabel = isTeamMember && commentAuthor !== issue.data.user.login && isRequestForInfo;
 
             console.log(`shouldAddLabel: ${shouldAddLabel}`);
 

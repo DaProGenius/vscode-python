@@ -22,7 +22,6 @@ env:
 jobs:
   lint:
     name: Lintasd
-    if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions
@@ -32,6 +31,8 @@ jobs:
           path: ./actions
       - name: Install Actions
         run: npm install --production --prefix ./actions
+      - name: Checkout Actions
+        uses: actions/checkout@v3
       - name: Lint
         uses: ./actions/lint
         with:

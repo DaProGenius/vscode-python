@@ -24,23 +24,21 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
           repository: 'microsoft/vscode-python-engineering'
-          path: ./actions
+          path: .
       - name: Copy folder to current repo
         run: |
-          cp -r ./actions/lint .
+          cp -r ./lint .
           git add lint
           git commit -m "Add lint from another-repo"
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Lint
-        uses: ./actions/lint
+        uses: ./lint
         with:
           node_version: ${{ env.NODE_VERSION }}
 

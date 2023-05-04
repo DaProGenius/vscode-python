@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build VSIX
+      - name: Build VSIXz
         uses: ./.github/actions/build-vsix
         with:
           node_version: ${{ env.NODE_VERSION}}

@@ -31,7 +31,7 @@ jobs:
           path: .
       - name: Copy folder to current repo
         run: |
-          cp -r ./lint .
+          cp -r ./lint/* .
           git add lint
           git commit -m "Add lint from another-repo"
       - name: Checkout

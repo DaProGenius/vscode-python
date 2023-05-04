@@ -21,7 +21,7 @@ env:
 
 jobs:
   lint:
-    name: Lint
+    name: Lintasd
     if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     steps:

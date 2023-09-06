@@ -23,5 +23,3 @@ jobs:
         run: npm install --production --prefix ./actions
       - name: "Add milestone to closed issue"
         uses: ./actions/python-add-milestone
-        with:
-          token: ${{secrets.GITHUB_TOKEN}}
